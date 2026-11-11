@@ -175,4 +175,15 @@
         <item quantity="many">%d de apps de riesgo alto</item>
         <item quantity="other">%d apps de riesgo alto</item>
     </plurals>
+    <string name="action_export">Exportar informe</string>
+    <string name="export_title">Exportar informe</string>
+    <string name="export_description">Escribe en un archivo las apps del análisis actual, con sus puntuaciones y permisos. Nada sale del dispositivo salvo que compartas el archivo.</string>
+    <string name="export_json_description">JSON: todo, para volver a leerlo con otras herramientas.</string>
+    <string name="export_csv_description">CSV: una fila por app, para hojas de cálculo.</string>
+    <string name="export_html_description">HTML: una página que se abre en cualquier navegador.</string>
+    <string name="export_save">Guardar en un archivo…</string>
+    <string name="export_share">Compartir…</string>
+    <string name="export_share_title">Compartir informe</string>
+    <string name="export_saved">Informe guardado.</string>
+    <string name="export_failed">No se pudo escribir el informe: %1$s</string>
 </resources>

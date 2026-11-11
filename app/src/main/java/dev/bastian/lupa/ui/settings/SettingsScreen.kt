@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +37,7 @@ import dev.bastian.lupa.domain.Settings
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
+fun SettingsScreen(onExport: () -> Unit, viewModel: SettingsViewModel = koinViewModel()) {
     val settings by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     // Bumped after the permission dialog closes so the "blocked" note is evaluated again.
@@ -76,6 +77,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = koinViewModel()) {
                 }
             },
         )
+        OutlinedButton(onClick = onExport, modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
+            Text(stringResource(R.string.action_export))
+        }
         if (settings.periodicAnalysis) {
             PeriodChips(settings, viewModel::setPeriodHours)
             SwitchRow(

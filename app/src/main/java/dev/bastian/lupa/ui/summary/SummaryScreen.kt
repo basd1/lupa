@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -45,6 +46,7 @@ import org.koin.androidx.compose.koinViewModel
 fun SummaryScreen(
     onShowApps: () -> Unit,
     onOpenCategory: (PermissionCategory) -> Unit,
+    onExport: () -> Unit,
     viewModel: SummaryViewModel = koinViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -54,6 +56,7 @@ fun SummaryScreen(
         onRisk = { viewModel.showRisk(it); onShowApps() },
         onOldTargets = { viewModel.showOldTargets(); onShowApps() },
         onCategory = onOpenCategory,
+        onExport = onExport,
     )
 }
 
@@ -64,6 +67,7 @@ fun SummaryContent(
     onRisk: (RiskLevel) -> Unit,
     onOldTargets: () -> Unit,
     onCategory: (PermissionCategory) -> Unit,
+    onExport: () -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         Row(
@@ -75,6 +79,9 @@ fun SummaryContent(
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.weight(1f),
             )
+            IconButton(onClick = onExport) {
+                Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.action_export))
+            }
             IconButton(onClick = onRefresh, enabled = state.progress == null) {
                 Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.action_rescan))
             }

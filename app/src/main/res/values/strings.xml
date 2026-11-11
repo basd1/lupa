@@ -169,4 +169,15 @@
         <item quantity="one">%d high-risk app</item>
         <item quantity="other">%d high-risk apps</item>
     </plurals>
+    <string name="action_export">Export report</string>
+    <string name="export_title">Export report</string>
+    <string name="export_description">Writes the apps in the current analysis, with their scores and permissions, to a file. Nothing leaves the device unless you share the file.</string>
+    <string name="export_json_description">JSON: everything, to read again with other tools.</string>
+    <string name="export_csv_description">CSV: one row per app, for spreadsheets.</string>
+    <string name="export_html_description">HTML: one page you can open in any browser.</string>
+    <string name="export_save">Save to a file…</string>
+    <string name="export_share">Share…</string>
+    <string name="export_share_title">Share report</string>
+    <string name="export_saved">Report saved.</string>
+    <string name="export_failed">The report could not be written: %1$s</string>
 </resources>

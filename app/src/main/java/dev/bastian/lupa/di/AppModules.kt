@@ -8,11 +8,13 @@ import androidx.work.WorkManager
 import coil.ImageLoader
 import dev.bastian.lupa.data.db.LupaDatabase
 import dev.bastian.lupa.data.db.RoomSnapshotRepository
+import dev.bastian.lupa.data.export.AndroidReportSink
 import dev.bastian.lupa.data.notify.AndroidChangeNotifier
 import dev.bastian.lupa.data.work.AnalysisScheduler
 import dev.bastian.lupa.data.work.AnalysisWorker
 import dev.bastian.lupa.domain.AnalysisRunner
 import dev.bastian.lupa.domain.ChangeNotifier
+import dev.bastian.lupa.domain.ReportSink
 import dev.bastian.lupa.domain.SnapshotRepository
 import dev.bastian.lupa.ui.changes.ChangesViewModel
 import org.koin.androidx.workmanager.dsl.workerOf
@@ -30,6 +32,7 @@ import dev.bastian.lupa.domain.SystemClock
 import dev.bastian.lupa.ui.apps.AppsViewModel
 import dev.bastian.lupa.ui.category.CategoryViewModel
 import dev.bastian.lupa.ui.detail.AppDetailViewModel
+import dev.bastian.lupa.ui.export.ExportViewModel
 import dev.bastian.lupa.ui.summary.SummaryViewModel
 import dev.bastian.lupa.ui.settings.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
@@ -60,6 +63,8 @@ val appModule = module {
 
     single { AppFilterStore() }
 
+    single<ReportSink> { AndroidReportSink(androidContext(), get()) }
+
     single {
         Room.databaseBuilder(androidContext(), LupaDatabase::class.java, "lupa.db").build()
     }
@@ -76,6 +81,7 @@ val appModule = module {
     viewModel { params -> CategoryViewModel(category = params.get(), catalog = get(), dispatchers = get()) }
     viewModel { params -> AppDetailViewModel(packageName = params.get(), catalog = get()) }
     viewModel { ChangesViewModel(snapshots = get(), runner = get(), settings = get(), dispatchers = get()) }
+    viewModel { ExportViewModel(catalog = get(), sink = get(), clock = get(), dispatchers = get()) }
     viewModel { SettingsViewModel(store = get(), scheduler = get()) }
 }
 

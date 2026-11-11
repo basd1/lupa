@@ -32,6 +32,7 @@ import dev.bastian.lupa.domain.PermissionCategory
 import dev.bastian.lupa.ui.category.CategoryScreen
 import dev.bastian.lupa.ui.changes.ChangesScreen
 import dev.bastian.lupa.ui.detail.AppDetailScreen
+import dev.bastian.lupa.ui.export.ExportScreen
 import dev.bastian.lupa.ui.summary.SummaryScreen
 import dev.bastian.lupa.ui.settings.SettingsScreen
 import kotlinx.serialization.Serializable
@@ -47,6 +48,9 @@ data object ChangesRoute
 
 @Serializable
 data object SettingsRoute
+
+@Serializable
+data object ExportRoute
 
 @Serializable
 data class CategoryRoute(val category: PermissionCategory)
@@ -98,6 +102,7 @@ fun LupaNavHost(openChangesToken: Int = 0) {
                 SummaryScreen(
                     onShowApps = { navController.navigateTopLevel(AppsRoute) },
                     onOpenCategory = { navController.navigate(CategoryRoute(it)) },
+                    onExport = { navController.navigate(ExportRoute) },
                 )
             }
             composable<CategoryRoute> { entry ->
@@ -119,7 +124,8 @@ fun LupaNavHost(openChangesToken: Int = 0) {
             composable<ChangesRoute> {
                 ChangesScreen(onOpenApp = { navController.navigate(AppDetailRoute(it)) })
             }
-            composable<SettingsRoute> { SettingsScreen() }
+            composable<SettingsRoute> { SettingsScreen(onExport = { navController.navigate(ExportRoute) }) }
+            composable<ExportRoute> { ExportScreen(onBack = { navController.popBackStack() }) }
         }
     }
 }
