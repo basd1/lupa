@@ -1,7 +1,9 @@
 package dev.bastian.lupa.ui.apps
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,12 +12,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -25,8 +33,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +52,10 @@ import coil.compose.AsyncImage
 import dev.bastian.lupa.R
 import dev.bastian.lupa.data.AppIcon
 import dev.bastian.lupa.domain.AppAssessment
+import dev.bastian.lupa.domain.AppKind
+import dev.bastian.lupa.domain.PermissionCategory
+import dev.bastian.lupa.domain.RiskLevel
+import dev.bastian.lupa.domain.SortOrder
 import dev.bastian.lupa.domain.RiskScore
 import dev.bastian.lupa.ui.containerColor
 import dev.bastian.lupa.ui.contentColor
@@ -52,21 +68,35 @@ fun AppsScreen(onOpenApp: (String) -> Unit, viewModel: AppsViewModel = koinViewM
     val state by viewModel.state.collectAsStateWithLifecycle()
     AppsContent(
         state = state,
-        onQueryChange = viewModel::onQueryChange,
-        onKindChange = viewModel::onKindChange,
-        onRefresh = viewModel::refresh,
-        onOpenApp = onOpenApp,
+        actions = AppsActions(
+            onQueryChange = viewModel::onQueryChange,
+            onKindChange = viewModel::onKindChange,
+            onRiskChange = viewModel::onRiskChange,
+            onCategoryChange = viewModel::onCategoryChange,
+            onOldTargetChange = viewModel::onOldTargetChange,
+            onSortChange = viewModel::onSortChange,
+            onClearFilters = viewModel::clearFilters,
+            onRefresh = viewModel::refresh,
+            onOpenApp = onOpenApp,
+        ),
     )
 }
 
+class AppsActions(
+    val onQueryChange: (String) -> Unit = {},
+    val onKindChange: (AppKind) -> Unit = {},
+    val onRiskChange: (RiskLevel?) -> Unit = {},
+    val onCategoryChange: (PermissionCategory?) -> Unit = {},
+    val onOldTargetChange: (Boolean) -> Unit = {},
+    val onSortChange: (SortOrder) -> Unit = {},
+    val onClearFilters: () -> Unit = {},
+    val onRefresh: () -> Unit = {},
+    val onOpenApp: (String) -> Unit = {},
+)
+
 @Composable
-fun AppsContent(
-    state: AppsUiState,
-    onQueryChange: (String) -> Unit,
-    onKindChange: (AppKind) -> Unit,
-    onRefresh: () -> Unit,
-    onOpenApp: (String) -> Unit = {},
-) {
+fun AppsContent(state: AppsUiState, actions: AppsActions) {
+    val filter = state.filter
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp, top = 8.dp),
@@ -77,36 +107,27 @@ fun AppsContent(
                 style = MaterialTheme.typography.headlineSmall,
                 modifier = Modifier.weight(1f),
             )
-            IconButton(onClick = onRefresh, enabled = state.progress == null) {
+            SortMenu(filter.sort, actions.onSortChange)
+            IconButton(onClick = actions.onRefresh, enabled = state.progress == null) {
                 Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.action_rescan))
             }
         }
         OutlinedTextField(
-            value = state.query,
-            onValueChange = onQueryChange,
+            value = filter.query,
+            onValueChange = actions.onQueryChange,
             singleLine = true,
             placeholder = { Text(stringResource(R.string.search_apps)) },
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
             trailingIcon = {
-                if (state.query.isNotEmpty()) {
-                    IconButton(onClick = { onQueryChange("") }) {
+                if (filter.query.isNotEmpty()) {
+                    IconButton(onClick = { actions.onQueryChange("") }) {
                         Icon(Icons.Filled.Clear, contentDescription = stringResource(R.string.action_clear_search))
                     }
                 }
             },
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         )
-        if (state.systemAppsIncluded) {
-            Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AppKind.entries.forEach { kind ->
-                    FilterChip(
-                        selected = state.kind == kind,
-                        onClick = { onKindChange(kind) },
-                        label = { Text(stringResource(kind.labelRes())) },
-                    )
-                }
-            }
-        }
+        FilterRow(state, actions)
         val progress = state.progress
         if (progress != null) {
             ScanProgressBar(progress.done, progress.total)
@@ -138,7 +159,7 @@ fun AppsContent(
         } else {
             LazyColumn(Modifier.fillMaxSize()) {
                 items(state.apps, key = { it.app.packageName }) { item ->
-                    AppRow(item, onClick = { onOpenApp(item.app.packageName) })
+                    AppRow(item, onClick = { actions.onOpenApp(item.app.packageName) })
                     HorizontalDivider()
                 }
             }
@@ -162,7 +183,93 @@ private fun ScanProgressBar(done: Int, total: Int) {
 }
 
 @Composable
-private fun AppRow(item: AppAssessment, onClick: () -> Unit, imageLoader: ImageLoader = koinInject()) {
+private fun FilterRow(state: AppsUiState, actions: AppsActions) {
+    val filter = state.filter
+    Row(
+        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (state.systemAppsIncluded) {
+            AppKind.entries.forEach { kind ->
+                FilterChip(
+                    selected = filter.kind == kind,
+                    onClick = { actions.onKindChange(kind) },
+                    label = { Text(stringResource(kind.labelRes())) },
+                )
+            }
+        }
+        RiskLevel.entries.forEach { level ->
+            FilterChip(
+                selected = filter.risk == level,
+                onClick = { actions.onRiskChange(if (filter.risk == level) null else level) },
+                label = { Text(stringResource(level.labelRes())) },
+            )
+        }
+        CategoryFilter(filter.category, actions.onCategoryChange)
+        FilterChip(
+            selected = filter.oldTargetOnly,
+            onClick = { actions.onOldTargetChange(!filter.oldTargetOnly) },
+            label = { Text(stringResource(R.string.filter_old_target)) },
+        )
+        if (filter.hasNarrowing) {
+            TextButton(onClick = actions.onClearFilters) { Text(stringResource(R.string.filter_clear)) }
+        }
+    }
+}
+
+@Composable
+private fun CategoryFilter(selected: PermissionCategory?, onChange: (PermissionCategory?) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        FilterChip(
+            selected = selected != null,
+            onClick = { open = true },
+            label = { Text(stringResource(selected?.labelRes() ?: R.string.filter_category)) },
+            trailingIcon = { Icon(Icons.Filled.ArrowDropDown, contentDescription = null) },
+        )
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.filter_any_category)) },
+                onClick = { onChange(null); open = false },
+            )
+            PermissionCategory.entries.forEach { category ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(category.labelRes())) },
+                    onClick = { onChange(category); open = false },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SortMenu(sort: SortOrder, onChange: (SortOrder) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { open = true }) {
+            Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = stringResource(R.string.action_sort))
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            SortOrder.entries.forEach { order ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(order.labelRes())) },
+                    leadingIcon = { if (order == sort) Icon(Icons.Filled.Check, contentDescription = null) },
+                    onClick = { onChange(order); open = false },
+                )
+            }
+        }
+    }
+}
+
+private fun SortOrder.labelRes(): Int = when (this) {
+    SortOrder.RISK -> R.string.sort_risk
+    SortOrder.NAME -> R.string.sort_name
+    SortOrder.LAST_UPDATED -> R.string.sort_updated
+}
+
+@Composable
+internal fun AppRow(item: AppAssessment, onClick: () -> Unit, imageLoader: ImageLoader = koinInject()) {
     val app = item.app
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
@@ -202,7 +309,7 @@ private fun CategoryChips(item: AppAssessment) {
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                    modifier = Modifier.widthIn(max = 96.dp).padding(horizontal = 6.dp, vertical = 2.dp),
                 )
             }
         }
@@ -210,6 +317,8 @@ private fun CategoryChips(item: AppAssessment) {
             Text(
                 stringResource(R.string.chips_more, active.size - MAX_CHIPS),
                 style = MaterialTheme.typography.labelSmall,
+                maxLines = 1,
+                softWrap = false,
                 modifier = Modifier.align(Alignment.CenterVertically),
             )
         }

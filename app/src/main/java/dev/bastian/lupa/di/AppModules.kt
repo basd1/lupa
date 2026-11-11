@@ -10,12 +10,15 @@ import dev.bastian.lupa.data.AppIconKeyer
 import dev.bastian.lupa.data.DataStoreSettings
 import dev.bastian.lupa.domain.AppCatalog
 import dev.bastian.lupa.domain.AppDispatchers
+import dev.bastian.lupa.domain.AppFilterStore
 import dev.bastian.lupa.domain.Clock
 import dev.bastian.lupa.domain.InstalledAppsSource
 import dev.bastian.lupa.domain.SettingsStore
 import dev.bastian.lupa.domain.SystemClock
 import dev.bastian.lupa.ui.apps.AppsViewModel
+import dev.bastian.lupa.ui.category.CategoryViewModel
 import dev.bastian.lupa.ui.detail.AppDetailViewModel
+import dev.bastian.lupa.ui.summary.SummaryViewModel
 import dev.bastian.lupa.ui.settings.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -43,7 +46,11 @@ val appModule = module {
             .build()
     }
 
-    viewModel { AppsViewModel(catalog = get(), settings = get(), dispatchers = get()) }
+    single { AppFilterStore() }
+
+    viewModel { AppsViewModel(catalog = get(), filterStore = get(), settings = get(), dispatchers = get()) }
+    viewModel { SummaryViewModel(catalog = get(), filterStore = get(), dispatchers = get()) }
+    viewModel { params -> CategoryViewModel(category = params.get(), catalog = get(), dispatchers = get()) }
     viewModel { params -> AppDetailViewModel(packageName = params.get(), catalog = get()) }
     viewModel { SettingsViewModel(store = get()) }
 }

@@ -1,9 +1,12 @@
 package dev.bastian.lupa.domain
 
+import kotlinx.serialization.Serializable
+
 /**
  * Readable groups for the permissions that matter for privacy. The first block are runtime ("dangerous")
  * permissions; the second are special accesses that Android manages outside the normal permission dialog.
  */
+@Serializable
 enum class PermissionCategory {
     LOCATION,
     BACKGROUND_LOCATION,

@@ -2,27 +2,28 @@ package dev.bastian.lupa.ui.apps
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import dev.bastian.lupa.domain.AppAssessment
 import dev.bastian.lupa.domain.AppCatalog
 import dev.bastian.lupa.domain.AppDispatchers
-import dev.bastian.lupa.domain.AppAssessment
+import dev.bastian.lupa.domain.AppFilter
+import dev.bastian.lupa.domain.AppFilterStore
+import dev.bastian.lupa.domain.AppKind
+import dev.bastian.lupa.domain.PermissionCategory
+import dev.bastian.lupa.domain.RiskLevel
 import dev.bastian.lupa.domain.ScanProgress
 import dev.bastian.lupa.domain.SettingsStore
-import kotlinx.coroutines.flow.MutableStateFlow
+import dev.bastian.lupa.domain.SortOrder
+import dev.bastian.lupa.domain.filtered
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class AppKind { ALL, USER, SYSTEM }
-
 data class AppsUiState(
-    val query: String = "",
-    val kind: AppKind = AppKind.ALL,
-    /** The filter chips only make sense when system apps are part of the analysis. */
+    val filter: AppFilter = AppFilter(),
+    /** The kind chips only make sense when system apps are part of the analysis. */
     val systemAppsIncluded: Boolean = false,
     val apps: List<AppAssessment> = emptyList(),
     /** Apps in the analysis before search and filters, to tell "no apps yet" from "nothing matches". */
@@ -34,26 +35,23 @@ data class AppsUiState(
 
 class AppsViewModel(
     private val catalog: AppCatalog,
+    private val filterStore: AppFilterStore,
     settings: SettingsStore,
     dispatchers: AppDispatchers,
 ) : ViewModel() {
-
-    private val query = MutableStateFlow("")
-    private val kind = MutableStateFlow(AppKind.ALL)
 
     val state: StateFlow<AppsUiState> = combine(
         catalog.visibleApps,
         catalog.state,
         settings.settings,
-        query,
-        kind,
-    ) { visible, catalogState, current, text, selectedKind ->
-        val effectiveKind = if (current.includeSystemApps) selectedKind else AppKind.ALL
+        filterStore.filter,
+    ) { visible, catalogState, current, filter ->
+        // System apps that are left out of the analysis cannot be filtered in.
+        val effective = if (current.includeSystemApps) filter else filter.copy(kind = AppKind.ALL)
         AppsUiState(
-            query = text,
-            kind = effectiveKind,
+            filter = effective,
             systemAppsIncluded = current.includeSystemApps,
-            apps = visible.filterApps(text, effectiveKind),
+            apps = visible.filtered(effective),
             totalApps = visible.size,
             progress = catalogState.progress,
             failedApps = catalogState.failures.size,
@@ -67,26 +65,21 @@ class AppsViewModel(
         if (catalog.state.value.scannedAt == null) refresh()
     }
 
-    fun onQueryChange(text: String) = query.update { text }
+    fun onQueryChange(text: String) = filterStore.update { it.copy(query = text) }
 
-    fun onKindChange(value: AppKind) = kind.update { value }
+    fun onKindChange(value: AppKind) = filterStore.update { it.copy(kind = value) }
+
+    fun onRiskChange(value: RiskLevel?) = filterStore.update { it.copy(risk = value) }
+
+    fun onCategoryChange(value: PermissionCategory?) = filterStore.update { it.copy(category = value) }
+
+    fun onOldTargetChange(value: Boolean) = filterStore.update { it.copy(oldTargetOnly = value) }
+
+    fun onSortChange(value: SortOrder) = filterStore.update { it.copy(sort = value) }
+
+    fun clearFilters() = filterStore.update { AppFilter(sort = it.sort) }
 
     fun refresh() {
         viewModelScope.launch { catalog.refresh() }
     }
-}
-
-internal fun List<AppAssessment>.filterApps(query: String, kind: AppKind): List<AppAssessment> {
-    val needle = query.trim()
-    return filter { item ->
-        val app = item.app
-        val kindMatches = when (kind) {
-            AppKind.ALL -> true
-            AppKind.USER -> !app.isSystem
-            AppKind.SYSTEM -> app.isSystem
-        }
-        kindMatches && (needle.isEmpty() ||
-            app.label.contains(needle, ignoreCase = true) ||
-            app.packageName.contains(needle, ignoreCase = true))
-    }.sortedBy { it.app.label.lowercase() }
 }

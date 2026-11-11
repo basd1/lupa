@@ -109,4 +109,27 @@
     <string name="protection_other">other</string>
     <string name="protection_unknown">unknown</string>
     <string name="chips_more">+%1$d</string>
+    <string name="filter_old_target">Old target API</string>
+    <string name="filter_clear">Clear</string>
+    <string name="filter_category">Category</string>
+    <string name="filter_any_category">Any category</string>
+    <string name="action_sort">Sort</string>
+    <string name="sort_risk">Risk</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_updated">Last updated</string>
+    <string name="summary_breakdown">%1$d user, %2$d system</string>
+    <string name="summary_risk_title">Risk levels</string>
+    <string name="summary_old_target_title">Old target API</string>
+    <string name="summary_old_target_caption">apps target an Android version older than 12</string>
+    <string name="summary_categories_title">Access by category</string>
+    <string name="summary_with_access">with access</string>
+    <string name="summary_requested_only">%1$d asked, not granted</string>
+    <string name="summary_disclaimer">Scores are indicative, not a verdict. Everything is computed on this device.</string>
+    <string name="category_with_access">Apps with access (%1$d)</string>
+    <string name="category_requested_only">Asked for but not granted (%1$d)</string>
+    <string name="category_none">No app uses this.</string>
+    <plurals name="summary_total">
+        <item quantity="one">%d app analysed</item>
+        <item quantity="other">%d apps analysed</item>
+    </plurals>
 </resources>

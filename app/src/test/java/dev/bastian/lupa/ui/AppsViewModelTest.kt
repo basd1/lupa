@@ -8,7 +8,8 @@ import dev.bastian.lupa.app
 import dev.bastian.lupa.domain.AppCatalog
 import dev.bastian.lupa.domain.AppDispatchers
 import dev.bastian.lupa.domain.ScanFailure
-import dev.bastian.lupa.ui.apps.AppKind
+import dev.bastian.lupa.domain.AppFilterStore
+import dev.bastian.lupa.domain.AppKind
 import dev.bastian.lupa.ui.apps.AppsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,6 +35,7 @@ class AppsViewModelTest {
         ),
     )
     private val settings = FakeSettings()
+    private val filterStore = AppFilterStore()
 
     @Before
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -43,16 +45,17 @@ class AppsViewModelTest {
 
     private fun viewModel() = AppsViewModel(
         catalog = AppCatalog(source, settings, FakeClock(), AppDispatchers(dispatcher, dispatcher)),
+        filterStore = filterStore,
         settings = settings,
         dispatchers = AppDispatchers(dispatcher, dispatcher),
     )
 
     @Test
-    fun listsUserAppsSortedByNameAndScansOnceOnStart() = runTest(dispatcher) {
+    fun listsUserAppsAndScansOnceOnStart() = runTest(dispatcher) {
         val vm = viewModel()
         vm.state.test {
             val state = expectMostRecentItem()
-            assertEquals(listOf("Alpha", "Zeta"), state.apps.map { it.app.label })
+            assertEquals(listOf("Alpha", "Zeta"), state.apps.map { it.app.label }.sorted())
             assertEquals(2, state.totalApps)
             assertNull(state.progress)
             cancelAndIgnoreRemainingEvents()
@@ -82,7 +85,7 @@ class AppsViewModelTest {
             vm.onKindChange(AppKind.SYSTEM)
             assertEquals(listOf("Settings"), expectMostRecentItem().apps.map { it.app.label })
             vm.onKindChange(AppKind.USER)
-            assertEquals(listOf("Alpha", "Zeta"), expectMostRecentItem().apps.map { it.app.label })
+            assertEquals(listOf("Alpha", "Zeta"), expectMostRecentItem().apps.map { it.app.label }.sorted())
             cancelAndIgnoreRemainingEvents()
         }
     }

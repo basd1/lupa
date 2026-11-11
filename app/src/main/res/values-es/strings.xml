@@ -111,4 +111,28 @@
     <string name="protection_other">otro</string>
     <string name="protection_unknown">desconocido</string>
     <string name="chips_more">+%1$d</string>
+    <string name="filter_old_target">API de destino antigua</string>
+    <string name="filter_clear">Quitar</string>
+    <string name="filter_category">Categoría</string>
+    <string name="filter_any_category">Cualquier categoría</string>
+    <string name="action_sort">Ordenar</string>
+    <string name="sort_risk">Riesgo</string>
+    <string name="sort_name">Nombre</string>
+    <string name="sort_updated">Última actualización</string>
+    <string name="summary_breakdown">%1$d de usuario, %2$d de sistema</string>
+    <string name="summary_risk_title">Niveles de riesgo</string>
+    <string name="summary_old_target_title">API de destino antigua</string>
+    <string name="summary_old_target_caption">apps apuntan a una versión de Android anterior a la 12</string>
+    <string name="summary_categories_title">Acceso por categoría</string>
+    <string name="summary_with_access">con acceso</string>
+    <string name="summary_requested_only">%1$d lo piden sin concesión</string>
+    <string name="summary_disclaimer">Las puntuaciones son orientativas, no un veredicto. Todo se calcula en este dispositivo.</string>
+    <string name="category_with_access">Apps con acceso (%1$d)</string>
+    <string name="category_requested_only">Lo piden pero sin concesión (%1$d)</string>
+    <string name="category_none">Ninguna app lo usa.</string>
+    <plurals name="summary_total">
+        <item quantity="one">%d app analizada</item>
+        <item quantity="many">%d de apps analizadas</item>
+        <item quantity="other">%d apps analizadas</item>
+    </plurals>
 </resources>
