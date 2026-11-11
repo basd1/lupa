@@ -1,11 +1,13 @@
 package dev.bastian.lupa.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -23,6 +25,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import dev.bastian.lupa.R
+import dev.bastian.lupa.ui.apps.AppsScreen
+import dev.bastian.lupa.ui.settings.SettingsScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -31,11 +35,15 @@ data object SummaryRoute
 @Serializable
 data object AppsRoute
 
+@Serializable
+data object SettingsRoute
+
 private class TopLevel(val route: Any, val labelRes: Int, val icon: ImageVector)
 
 private val topLevel = listOf(
     TopLevel(SummaryRoute, R.string.nav_summary, Icons.Filled.Dashboard),
     TopLevel(AppsRoute, R.string.nav_apps, Icons.Filled.Apps),
+    TopLevel(SettingsRoute, R.string.nav_settings, Icons.Filled.Settings),
 )
 
 @Composable
@@ -43,6 +51,8 @@ fun LupaNavHost() {
     val navController = rememberNavController()
     val backStack by navController.currentBackStackEntryAsState()
     Scaffold(
+        // Each screen applies the status bar inset itself.
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             NavigationBar {
                 topLevel.forEach { item ->
@@ -58,7 +68,8 @@ fun LupaNavHost() {
     ) { padding ->
         NavHost(navController, startDestination = AppsRoute, modifier = Modifier.padding(padding)) {
             composable<SummaryRoute> { Box(Modifier.fillMaxSize(), Alignment.Center) { Text(stringResource(R.string.nav_summary)) } }
-            composable<AppsRoute> { Box(Modifier.fillMaxSize(), Alignment.Center) { Text(stringResource(R.string.nav_apps)) } }
+            composable<AppsRoute> { AppsScreen() }
+            composable<SettingsRoute> { SettingsScreen() }
         }
     }
 }
