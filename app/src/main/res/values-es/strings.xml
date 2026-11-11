@@ -119,13 +119,13 @@
     <string name="sort_risk">Riesgo</string>
     <string name="sort_name">Nombre</string>
     <string name="sort_updated">Última actualización</string>
-    <string name="summary_breakdown">%1$d de usuario, %2$d de sistema</string>
+    <string name="summary_breakdown">Usuario: %1$d · Sistema: %2$d</string>
     <string name="summary_risk_title">Niveles de riesgo</string>
     <string name="summary_old_target_title">API de destino antigua</string>
     <string name="summary_old_target_caption">apps apuntan a una versión de Android anterior a la 12</string>
     <string name="summary_categories_title">Acceso por categoría</string>
     <string name="summary_with_access">con acceso</string>
-    <string name="summary_requested_only">%1$d lo piden sin concesión</string>
+    <string name="summary_requested_only">Pedido sin conceder: %1$d</string>
     <string name="summary_disclaimer">Las puntuaciones son orientativas, no un veredicto. Todo se calcula en este dispositivo.</string>
     <string name="category_with_access">Apps con acceso (%1$d)</string>
     <string name="category_requested_only">Lo piden pero sin concesión (%1$d)</string>
@@ -134,5 +134,45 @@
         <item quantity="one">%d app analizada</item>
         <item quantity="many">%d de apps analizadas</item>
         <item quantity="other">%d apps analizadas</item>
+    </plurals>
+    <string name="action_analyze">Analizar ahora</string>
+    <string name="analysis_running">Analizando…</string>
+    <string name="analysis_failed">El análisis falló: %1$s</string>
+    <string name="changes_need_two">Haz al menos dos análisis para compararlos. Cada análisis guarda una instantánea de las apps instaladas y sus permisos.</string>
+    <string name="changes_from">Desde</string>
+    <string name="changes_to">Hasta</string>
+    <string name="changes_snapshot">%1$s · %2$d apps</string>
+    <string name="changes_none">No hay diferencias entre estos dos análisis.</string>
+    <string name="changes_new_apps">Apps nuevas (%1$d)</string>
+    <string name="changes_removed_apps">Apps eliminadas (%1$d)</string>
+    <string name="changes_updated_apps">Apps actualizadas (%1$d)</string>
+    <string name="changes_new_permissions">Permisos nuevos solicitados (%1$d)</string>
+    <string name="changes_newly_granted">Permisos recién concedidos (%1$d)</string>
+    <string name="changes_revoked">Permisos revocados (%1$d)</string>
+    <string name="changes_version_change">%1$s → %2$s</string>
+    <string name="setting_periodic">Análisis periódico</string>
+    <string name="setting_periodic_description">Analiza en segundo plano y compara con el análisis anterior.</string>
+    <string name="setting_period">Cada</string>
+    <string name="setting_period_hours">%1$d h</string>
+    <string name="setting_period_days">%1$d d</string>
+    <string name="setting_notify">Avisar de los cambios</string>
+    <string name="setting_notify_description">Solo cuando se concede un permiso o aparece una app de riesgo alto.</string>
+    <string name="setting_notifications_blocked">Las notificaciones están bloqueadas para Lupa, así que los cambios solo se verán en la pantalla de Cambios.</string>
+    <string name="notify_channel">Cambios en las apps instaladas</string>
+    <string name="notify_title">Lupa encontró cambios</string>
+    <plurals name="notify_new_apps">
+        <item quantity="one">%d app nueva</item>
+        <item quantity="many">%d de apps nuevas</item>
+        <item quantity="other">%d apps nuevas</item>
+    </plurals>
+    <plurals name="notify_granted">
+        <item quantity="one">%d permiso concedido</item>
+        <item quantity="many">%d de permisos concedidos</item>
+        <item quantity="other">%d permisos concedidos</item>
+    </plurals>
+    <plurals name="notify_high_risk">
+        <item quantity="one">%d app de riesgo alto</item>
+        <item quantity="many">%d de apps de riesgo alto</item>
+        <item quantity="other">%d apps de riesgo alto</item>
     </plurals>
 </resources>

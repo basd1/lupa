@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Dashboard
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -12,6 +13,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -28,6 +30,7 @@ import dev.bastian.lupa.R
 import dev.bastian.lupa.ui.apps.AppsScreen
 import dev.bastian.lupa.domain.PermissionCategory
 import dev.bastian.lupa.ui.category.CategoryScreen
+import dev.bastian.lupa.ui.changes.ChangesScreen
 import dev.bastian.lupa.ui.detail.AppDetailScreen
 import dev.bastian.lupa.ui.summary.SummaryScreen
 import dev.bastian.lupa.ui.settings.SettingsScreen
@@ -38,6 +41,9 @@ data object SummaryRoute
 
 @Serializable
 data object AppsRoute
+
+@Serializable
+data object ChangesRoute
 
 @Serializable
 data object SettingsRoute
@@ -53,6 +59,7 @@ private class TopLevel(val route: Any, val labelRes: Int, val icon: ImageVector)
 private val topLevel = listOf(
     TopLevel(SummaryRoute, R.string.nav_summary, Icons.Filled.Dashboard),
     TopLevel(AppsRoute, R.string.nav_apps, Icons.Filled.Apps),
+    TopLevel(ChangesRoute, R.string.nav_changes, Icons.Filled.History),
     TopLevel(SettingsRoute, R.string.nav_settings, Icons.Filled.Settings),
 )
 
@@ -63,8 +70,12 @@ private fun NavHostController.navigateTopLevel(route: Any) = navigate(route) {
 }
 
 @Composable
-fun LupaNavHost() {
+fun LupaNavHost(openChangesToken: Int = 0) {
     val navController = rememberNavController()
+    // A notification asks for the Changes screen; the token changes with every such request.
+    LaunchedEffect(openChangesToken) {
+        if (openChangesToken > 0) navController.navigateTopLevel(ChangesRoute)
+    }
     val backStack by navController.currentBackStackEntryAsState()
     Scaffold(
         // Each screen applies the status bar inset itself.
@@ -104,6 +115,9 @@ fun LupaNavHost() {
                     packageName = entry.toRoute<AppDetailRoute>().packageName,
                     onBack = { navController.popBackStack() },
                 )
+            }
+            composable<ChangesRoute> {
+                ChangesScreen(onOpenApp = { navController.navigate(AppDetailRoute(it)) })
             }
             composable<SettingsRoute> { SettingsScreen() }
         }

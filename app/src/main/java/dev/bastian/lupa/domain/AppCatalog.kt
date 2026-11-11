@@ -36,9 +36,12 @@ class AppCatalog(
         if (current.includeSystemApps) catalog.apps else catalog.apps.filterNot { it.app.isSystem }
     }
 
-    /** Scans again. A scan that is already running is not repeated; returns null in that case or on failure. */
-    suspend fun refresh(): ScanResult? {
-        if (!scanLock.tryLock()) return null
+    /**
+     * Scans again. By default a scan that is already running is not repeated and the call returns null; with
+     * [waitIfBusy] it waits its turn and scans. Also null when the scan fails.
+     */
+    suspend fun refresh(waitIfBusy: Boolean = false): ScanResult? {
+        if (waitIfBusy) scanLock.lock() else if (!scanLock.tryLock()) return null
         try {
             mutableState.update { it.copy(progress = ScanProgress(0, 0), error = null) }
             val result = try {

@@ -1,5 +1,6 @@
 package dev.bastian.lupa.domain
 
+import androidx.annotation.Keep
 import kotlinx.serialization.Serializable
 
 /**
@@ -7,6 +8,7 @@ import kotlinx.serialization.Serializable
  * permissions; the second are special accesses that Android manages outside the normal permission dialog.
  */
 @Serializable
+@Keep
 enum class PermissionCategory {
     LOCATION,
     BACKGROUND_LOCATION,

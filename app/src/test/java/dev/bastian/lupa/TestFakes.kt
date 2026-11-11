@@ -13,6 +13,11 @@ import dev.bastian.lupa.domain.Settings
 import dev.bastian.lupa.domain.SettingsStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import dev.bastian.lupa.domain.AnalysisOutcome
+import dev.bastian.lupa.domain.ChangeNotifier
+import dev.bastian.lupa.domain.Snapshot
+import dev.bastian.lupa.domain.SnapshotHeader
+import dev.bastian.lupa.domain.SnapshotRepository
 
 fun app(
     packageName: String,
@@ -71,4 +76,31 @@ class FakeSettings(initial: Settings = Settings()) : SettingsStore {
 
 class FakeClock(var time: Long = 10_000) : Clock {
     override fun now(): Long = time
+}
+
+class FakeSnapshots : SnapshotRepository {
+    val stored = mutableListOf<Snapshot>()
+    private val list = MutableStateFlow<List<SnapshotHeader>>(emptyList())
+    override val headers: Flow<List<SnapshotHeader>> = list
+    private var nextId = 1L
+
+    override suspend fun save(takenAt: Long, apps: List<InstalledApp>): Long {
+        val snapshot = Snapshot(nextId++, takenAt, apps)
+        stored += snapshot
+        stored.sortWith(compareByDescending<Snapshot> { it.takenAt }.thenByDescending { it.id })
+        while (stored.size > SnapshotRepository.MAX_SNAPSHOTS) stored.removeAt(stored.lastIndex)
+        list.value = stored.map { SnapshotHeader(it.id, it.takenAt, it.apps.size) }
+        return snapshot.id
+    }
+
+    override suspend fun load(id: Long): Snapshot? = stored.firstOrNull { it.id == id }
+
+    override suspend fun latest(): Snapshot? = stored.firstOrNull()
+}
+
+class FakeNotifier : ChangeNotifier {
+    val outcomes = mutableListOf<AnalysisOutcome>()
+    override fun notifyChanges(outcome: AnalysisOutcome) {
+        outcomes += outcome
+    }
 }

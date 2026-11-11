@@ -3,7 +3,19 @@ package dev.bastian.lupa.di
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
+import androidx.room.Room
+import androidx.work.WorkManager
 import coil.ImageLoader
+import dev.bastian.lupa.data.db.LupaDatabase
+import dev.bastian.lupa.data.db.RoomSnapshotRepository
+import dev.bastian.lupa.data.notify.AndroidChangeNotifier
+import dev.bastian.lupa.data.work.AnalysisScheduler
+import dev.bastian.lupa.data.work.AnalysisWorker
+import dev.bastian.lupa.domain.AnalysisRunner
+import dev.bastian.lupa.domain.ChangeNotifier
+import dev.bastian.lupa.domain.SnapshotRepository
+import dev.bastian.lupa.ui.changes.ChangesViewModel
+import org.koin.androidx.workmanager.dsl.workerOf
 import dev.bastian.lupa.data.AndroidInstalledAppsSource
 import dev.bastian.lupa.data.AppIconFetcher
 import dev.bastian.lupa.data.AppIconKeyer
@@ -48,11 +60,23 @@ val appModule = module {
 
     single { AppFilterStore() }
 
+    single {
+        Room.databaseBuilder(androidContext(), LupaDatabase::class.java, "lupa.db").build()
+    }
+    single<SnapshotRepository> { RoomSnapshotRepository(get(), get()) }
+    single { AnalysisRunner(catalog = get(), snapshots = get(), settings = get(), clock = get()) }
+
+    single { WorkManager.getInstance(androidContext()) }
+    single { AnalysisScheduler(get()) }
+    single<ChangeNotifier> { AndroidChangeNotifier(androidContext()) }
+    workerOf(::AnalysisWorker)
+
     viewModel { AppsViewModel(catalog = get(), filterStore = get(), settings = get(), dispatchers = get()) }
     viewModel { SummaryViewModel(catalog = get(), filterStore = get(), dispatchers = get()) }
     viewModel { params -> CategoryViewModel(category = params.get(), catalog = get(), dispatchers = get()) }
     viewModel { params -> AppDetailViewModel(packageName = params.get(), catalog = get()) }
-    viewModel { SettingsViewModel(store = get()) }
+    viewModel { ChangesViewModel(snapshots = get(), runner = get(), settings = get(), dispatchers = get()) }
+    viewModel { SettingsViewModel(store = get(), scheduler = get()) }
 }
 
 val appModules = listOf(appModule)
