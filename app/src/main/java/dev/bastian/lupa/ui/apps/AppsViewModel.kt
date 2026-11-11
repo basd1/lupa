@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dev.bastian.lupa.domain.AppCatalog
 import dev.bastian.lupa.domain.AppDispatchers
-import dev.bastian.lupa.domain.InstalledApp
+import dev.bastian.lupa.domain.AppAssessment
 import dev.bastian.lupa.domain.ScanProgress
 import dev.bastian.lupa.domain.SettingsStore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +24,7 @@ data class AppsUiState(
     val kind: AppKind = AppKind.ALL,
     /** The filter chips only make sense when system apps are part of the analysis. */
     val systemAppsIncluded: Boolean = false,
-    val apps: List<InstalledApp> = emptyList(),
+    val apps: List<AppAssessment> = emptyList(),
     /** Apps in the analysis before search and filters, to tell "no apps yet" from "nothing matches". */
     val totalApps: Int = 0,
     val progress: ScanProgress? = null,
@@ -76,9 +76,10 @@ class AppsViewModel(
     }
 }
 
-internal fun List<InstalledApp>.filterApps(query: String, kind: AppKind): List<InstalledApp> {
+internal fun List<AppAssessment>.filterApps(query: String, kind: AppKind): List<AppAssessment> {
     val needle = query.trim()
-    return filter { app ->
+    return filter { item ->
+        val app = item.app
         val kindMatches = when (kind) {
             AppKind.ALL -> true
             AppKind.USER -> !app.isSystem
@@ -87,5 +88,5 @@ internal fun List<InstalledApp>.filterApps(query: String, kind: AppKind): List<I
         kindMatches && (needle.isEmpty() ||
             app.label.contains(needle, ignoreCase = true) ||
             app.packageName.contains(needle, ignoreCase = true))
-    }.sortedBy { it.label.lowercase() }
+    }.sortedBy { it.app.label.lowercase() }
 }

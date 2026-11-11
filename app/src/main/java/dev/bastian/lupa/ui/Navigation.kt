@@ -24,8 +24,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import dev.bastian.lupa.R
 import dev.bastian.lupa.ui.apps.AppsScreen
+import dev.bastian.lupa.ui.detail.AppDetailScreen
 import dev.bastian.lupa.ui.settings.SettingsScreen
 import kotlinx.serialization.Serializable
 
@@ -37,6 +39,9 @@ data object AppsRoute
 
 @Serializable
 data object SettingsRoute
+
+@Serializable
+data class AppDetailRoute(val packageName: String)
 
 private class TopLevel(val route: Any, val labelRes: Int, val icon: ImageVector)
 
@@ -54,7 +59,7 @@ fun LupaNavHost() {
         // Each screen applies the status bar inset itself.
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            NavigationBar {
+            if (topLevel.any { backStack?.destination?.hasRoute(it.route::class) == true }) NavigationBar {
                 topLevel.forEach { item ->
                     NavigationBarItem(
                         selected = backStack?.destination?.hasRoute(item.route::class) == true,
@@ -68,7 +73,15 @@ fun LupaNavHost() {
     ) { padding ->
         NavHost(navController, startDestination = AppsRoute, modifier = Modifier.padding(padding)) {
             composable<SummaryRoute> { Box(Modifier.fillMaxSize(), Alignment.Center) { Text(stringResource(R.string.nav_summary)) } }
-            composable<AppsRoute> { AppsScreen() }
+            composable<AppsRoute> {
+                AppsScreen(onOpenApp = { navController.navigate(AppDetailRoute(it)) })
+            }
+            composable<AppDetailRoute> { entry ->
+                AppDetailScreen(
+                    packageName = entry.toRoute<AppDetailRoute>().packageName,
+                    onBack = { navController.popBackStack() },
+                )
+            }
             composable<SettingsRoute> { SettingsScreen() }
         }
     }

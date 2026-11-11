@@ -42,7 +42,7 @@ class AppsViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun viewModel() = AppsViewModel(
-        catalog = AppCatalog(source, settings, FakeClock()),
+        catalog = AppCatalog(source, settings, FakeClock(), AppDispatchers(dispatcher, dispatcher)),
         settings = settings,
         dispatchers = AppDispatchers(dispatcher, dispatcher),
     )
@@ -52,7 +52,7 @@ class AppsViewModelTest {
         val vm = viewModel()
         vm.state.test {
             val state = expectMostRecentItem()
-            assertEquals(listOf("Alpha", "Zeta"), state.apps.map { it.label })
+            assertEquals(listOf("Alpha", "Zeta"), state.apps.map { it.app.label })
             assertEquals(2, state.totalApps)
             assertNull(state.progress)
             cancelAndIgnoreRemainingEvents()
@@ -80,9 +80,9 @@ class AppsViewModelTest {
         vm.state.test {
             expectMostRecentItem()
             vm.onKindChange(AppKind.SYSTEM)
-            assertEquals(listOf("Settings"), expectMostRecentItem().apps.map { it.label })
+            assertEquals(listOf("Settings"), expectMostRecentItem().apps.map { it.app.label })
             vm.onKindChange(AppKind.USER)
-            assertEquals(listOf("Alpha", "Zeta"), expectMostRecentItem().apps.map { it.label })
+            assertEquals(listOf("Alpha", "Zeta"), expectMostRecentItem().apps.map { it.app.label })
             cancelAndIgnoreRemainingEvents()
         }
     }
@@ -93,9 +93,9 @@ class AppsViewModelTest {
         vm.state.test {
             expectMostRecentItem()
             vm.onQueryChange("ALP")
-            assertEquals(listOf("Alpha"), expectMostRecentItem().apps.map { it.label })
+            assertEquals(listOf("Alpha"), expectMostRecentItem().apps.map { it.app.label })
             vm.onQueryChange("example.zeta")
-            assertEquals(listOf("Zeta"), expectMostRecentItem().apps.map { it.label })
+            assertEquals(listOf("Zeta"), expectMostRecentItem().apps.map { it.app.label })
             vm.onQueryChange("nothing")
             val empty = expectMostRecentItem()
             assertTrue(empty.apps.isEmpty())
@@ -136,7 +136,7 @@ class AppsViewModelTest {
             expectMostRecentItem()
             source.apps = source.apps + app("com.example.new", "Newcomer")
             vm.refresh()
-            assertTrue(expectMostRecentItem().apps.any { it.label == "Newcomer" })
+            assertTrue(expectMostRecentItem().apps.any { it.app.label == "Newcomer" })
             cancelAndIgnoreRemainingEvents()
         }
         assertEquals(2, source.scans)

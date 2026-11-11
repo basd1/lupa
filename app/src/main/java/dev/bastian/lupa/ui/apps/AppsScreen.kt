@@ -1,5 +1,6 @@
 package dev.bastian.lupa.ui.apps
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -37,18 +39,23 @@ import coil.ImageLoader
 import coil.compose.AsyncImage
 import dev.bastian.lupa.R
 import dev.bastian.lupa.data.AppIcon
-import dev.bastian.lupa.domain.InstalledApp
+import dev.bastian.lupa.domain.AppAssessment
+import dev.bastian.lupa.domain.RiskScore
+import dev.bastian.lupa.ui.containerColor
+import dev.bastian.lupa.ui.contentColor
+import dev.bastian.lupa.ui.labelRes
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
-fun AppsScreen(viewModel: AppsViewModel = koinViewModel()) {
+fun AppsScreen(onOpenApp: (String) -> Unit, viewModel: AppsViewModel = koinViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     AppsContent(
         state = state,
         onQueryChange = viewModel::onQueryChange,
         onKindChange = viewModel::onKindChange,
         onRefresh = viewModel::refresh,
+        onOpenApp = onOpenApp,
     )
 }
 
@@ -58,6 +65,7 @@ fun AppsContent(
     onQueryChange: (String) -> Unit,
     onKindChange: (AppKind) -> Unit,
     onRefresh: () -> Unit,
+    onOpenApp: (String) -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         Row(
@@ -129,8 +137,8 @@ fun AppsContent(
             }
         } else {
             LazyColumn(Modifier.fillMaxSize()) {
-                items(state.apps, key = { it.packageName }) { app ->
-                    AppRow(app)
+                items(state.apps, key = { it.app.packageName }) { item ->
+                    AppRow(item, onClick = { onOpenApp(item.app.packageName) })
                     HorizontalDivider()
                 }
             }
@@ -154,9 +162,10 @@ private fun ScanProgressBar(done: Int, total: Int) {
 }
 
 @Composable
-private fun AppRow(app: InstalledApp, imageLoader: ImageLoader = koinInject()) {
+private fun AppRow(item: AppAssessment, onClick: () -> Unit, imageLoader: ImageLoader = koinInject()) {
+    val app = item.app
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
@@ -166,7 +175,7 @@ private fun AppRow(app: InstalledApp, imageLoader: ImageLoader = koinInject()) {
             contentDescription = null,
             modifier = Modifier.size(40.dp).clip(MaterialTheme.shapes.small),
         )
-        Column(Modifier.weight(1f)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(app.label, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
                 app.packageName,
@@ -175,9 +184,49 @@ private fun AppRow(app: InstalledApp, imageLoader: ImageLoader = koinInject()) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
+            CategoryChips(item)
+        }
+        ScoreBadge(item.score)
+    }
+}
+
+@Composable
+private fun CategoryChips(item: AppAssessment) {
+    val active = item.permissions.categories.filter { it.isActive }.map { it.category }
+    if (active.isEmpty()) return
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        active.take(MAX_CHIPS).forEach { category ->
+            Surface(shape = MaterialTheme.shapes.extraSmall, color = MaterialTheme.colorScheme.surfaceVariant) {
+                Text(
+                    stringResource(category.labelRes()),
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                )
+            }
+        }
+        if (active.size > MAX_CHIPS) {
+            Text(
+                stringResource(R.string.chips_more, active.size - MAX_CHIPS),
+                style = MaterialTheme.typography.labelSmall,
+                modifier = Modifier.align(Alignment.CenterVertically),
+            )
         }
     }
 }
+
+@Composable
+private fun ScoreBadge(score: RiskScore) {
+    Surface(shape = MaterialTheme.shapes.small, color = score.level.containerColor(), contentColor = score.level.contentColor()) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(score.value.toString(), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(score.level.labelRes()), style = MaterialTheme.typography.labelSmall)
+        }
+    }
+}
+
+private const val MAX_CHIPS = 3
 
 private fun AppKind.labelRes(): Int = when (this) {
     AppKind.ALL -> R.string.kind_all

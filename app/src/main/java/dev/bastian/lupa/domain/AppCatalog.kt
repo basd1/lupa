@@ -6,10 +6,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
 
 /** What the screens see of the last scan. [progress] is non-null while a scan is running. */
 data class CatalogState(
-    val apps: List<InstalledApp> = emptyList(),
+    val apps: List<AppAssessment> = emptyList(),
     val scannedAt: Long? = null,
     val progress: ScanProgress? = null,
     val failures: List<ScanFailure> = emptyList(),
@@ -23,6 +24,7 @@ class AppCatalog(
     private val source: InstalledAppsSource,
     private val settings: SettingsStore,
     private val clock: Clock,
+    private val dispatchers: AppDispatchers,
 ) {
     private val mutableState = MutableStateFlow(CatalogState())
     private val scanLock = Mutex()
@@ -30,8 +32,8 @@ class AppCatalog(
     val state: StateFlow<CatalogState> = mutableState
 
     /** The scanned apps with the "include system apps" setting applied. */
-    val visibleApps: Flow<List<InstalledApp>> = combine(mutableState, settings.settings) { catalog, current ->
-        if (current.includeSystemApps) catalog.apps else catalog.apps.filterNot { it.isSystem }
+    val visibleApps: Flow<List<AppAssessment>> = combine(mutableState, settings.settings) { catalog, current ->
+        if (current.includeSystemApps) catalog.apps else catalog.apps.filterNot { it.app.isSystem }
     }
 
     /** Scans again. A scan that is already running is not repeated; returns null in that case or on failure. */
@@ -46,8 +48,9 @@ class AppCatalog(
                 mutableState.update { it.copy(progress = null, error = e.message ?: e.javaClass.simpleName) }
                 return null
             }
+            val assessed = withContext(dispatchers.default) { result.apps.map(AppAssessment::of) }
             mutableState.value = CatalogState(
-                apps = result.apps,
+                apps = assessed,
                 scannedAt = clock.now(),
                 failures = result.failures,
             )

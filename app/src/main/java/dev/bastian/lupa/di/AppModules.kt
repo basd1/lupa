@@ -15,6 +15,7 @@ import dev.bastian.lupa.domain.InstalledAppsSource
 import dev.bastian.lupa.domain.SettingsStore
 import dev.bastian.lupa.domain.SystemClock
 import dev.bastian.lupa.ui.apps.AppsViewModel
+import dev.bastian.lupa.ui.detail.AppDetailViewModel
 import dev.bastian.lupa.ui.settings.SettingsViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -31,7 +32,7 @@ val appModule = module {
     single<SettingsStore> { DataStoreSettings(get()) }
 
     single<InstalledAppsSource> { AndroidInstalledAppsSource(androidContext(), get()) }
-    single { AppCatalog(source = get(), settings = get(), clock = get()) }
+    single { AppCatalog(source = get(), settings = get(), clock = get(), dispatchers = get()) }
 
     single {
         ImageLoader.Builder(androidContext())
@@ -43,6 +44,7 @@ val appModule = module {
     }
 
     viewModel { AppsViewModel(catalog = get(), settings = get(), dispatchers = get()) }
+    viewModel { params -> AppDetailViewModel(packageName = params.get(), catalog = get()) }
     viewModel { SettingsViewModel(store = get()) }
 }
 
