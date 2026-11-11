@@ -8,6 +8,7 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PermissionInfo
 import android.os.Build
+import android.os.Trace
 import android.view.accessibility.AccessibilityManager
 import androidx.core.content.pm.PackageInfoCompat
 import dev.bastian.lupa.domain.AppDispatchers
@@ -36,6 +37,16 @@ class AndroidInstalledAppsSource(
     private val appOps = context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
 
     override suspend fun scan(onProgress: (ScanProgress) -> Unit): ScanResult = withContext(dispatchers.io) {
+        // The whole scan runs on this thread without suspending, so one trace section covers it; the benchmarks time it.
+        Trace.beginSection(TRACE_SECTION)
+        try {
+            scanAll(onProgress)
+        } finally {
+            Trace.endSection()
+        }
+    }
+
+    private suspend fun scanAll(onProgress: (ScanProgress) -> Unit): ScanResult {
         val names = installedPackageNames()
         val accessibilityPackages = accessibilityServicePackages()
         // The same permission is declared by many apps; its protection level is asked once.
@@ -55,7 +66,7 @@ class AndroidInstalledAppsSource(
                 onProgress(ScanProgress(index + 1, names.size))
             }
         }
-        ScanResult(apps, failures)
+        return ScanResult(apps, failures)
     }
 
     private fun installedPackageNames(): List<String> {
@@ -184,6 +195,7 @@ class AndroidInstalledAppsSource(
 
     private companion object {
         const val PROGRESS_STEP = 10
+        const val TRACE_SECTION = "lupa.scan"
         const val BIND_DEVICE_ADMIN = "android.permission.BIND_DEVICE_ADMIN"
         val APP_OP_PERMISSIONS = setOf(
             "android.permission.SYSTEM_ALERT_WINDOW",

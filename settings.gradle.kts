@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "lupa"
 include(":app")
+include(":baselineprofile")

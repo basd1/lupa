@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.baselineprofile)
 }
 
 android {
@@ -77,6 +78,9 @@ dependencies {
     implementation(libs.koin.workmanager)
     implementation(libs.androidx.work.runtime)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.profileinstaller)
+
+    baselineProfile(project(":baselineprofile"))
 
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)

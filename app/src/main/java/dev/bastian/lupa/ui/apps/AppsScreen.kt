@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -157,7 +158,7 @@ fun AppsContent(state: AppsUiState, actions: AppsActions) {
                 Text(stringResource(R.string.no_apps_match), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         } else {
-            LazyColumn(Modifier.fillMaxSize()) {
+            LazyColumn(Modifier.fillMaxSize().testTag("apps_list")) {
                 items(state.apps, key = { it.app.packageName }) { item ->
                     AppRow(item, onClick = { actions.onOpenApp(item.app.packageName) })
                     HorizontalDivider()

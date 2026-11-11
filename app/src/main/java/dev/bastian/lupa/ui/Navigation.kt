@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -82,6 +84,8 @@ fun LupaNavHost(openChangesToken: Int = 0) {
     }
     val backStack by navController.currentBackStackEntryAsState()
     Scaffold(
+        // Test tags become resource ids so UiAutomator, which the benchmarks use, can find Compose nodes.
+        modifier = Modifier.semantics { testTagsAsResourceId = true },
         // Each screen applies the status bar inset itself.
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
