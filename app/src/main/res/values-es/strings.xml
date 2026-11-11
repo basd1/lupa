@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lupa</string>
+    <string name="nav_summary">Resumen</string>
+    <string name="nav_apps">Apps</string>
+    <string name="nav_changes">Cambios</string>
+    <string name="nav_settings">Ajustes</string>
+</resources>
